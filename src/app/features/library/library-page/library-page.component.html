@@ -1,4 +1,4 @@
-<a class="banner" [href]="repositoryUrl" target="_blank" rel="noopener">
+<a class="banner" [href]="repositoryUrl" target="_blank" rel="noopener" (click)="analytics.event('github_click', { source: 'banner' })">
   <app-icon name="github" />
   <span class="banner-text">{{ 'banner.text' | t }}</span>
   <span class="banner-cta">{{ 'banner.cta' | t }} <app-icon name="arrow-up-right" /></span>
@@ -33,6 +33,7 @@
       [href]="repositoryUrl"
       target="_blank"
       rel="noopener"
+      (click)="analytics.event('github_click', { source: 'header' })"
       [attr.aria-label]="'header.github' | t"
       [title]="'header.github' | t"
     >
@@ -47,7 +48,7 @@
       <h2>{{ 'library.missingTitle' | t }}</h2>
       <p>{{ 'library.missingText' | t }}</p>
       <p class="local">{{ 'library.errorLocal' | t }} <code>npm run library</code></p>
-      <a class="retry" [href]="readmeUrl" target="_blank" rel="noopener">
+      <a class="retry" [href]="readmeUrl" target="_blank" rel="noopener" (click)="analytics.event('github_click', { source: 'readme' })">
         <app-icon name="github" /> {{ 'library.readme' | t }}
       </a>
     </section>

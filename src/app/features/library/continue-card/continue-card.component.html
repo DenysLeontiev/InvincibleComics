@@ -1,5 +1,5 @@
 @let t = target();
-<a class="card" [routerLink]="['/read', t.issue.id]" [attr.aria-label]="action() + ': Invincible ' + (t.issue.number | issueNumber)">
+<a class="card" [routerLink]="['/read', t.issue.id]" (click)="opened()" [attr.aria-label]="action() + ': Invincible ' + (t.issue.number | issueNumber)">
   <div class="backdrop" aria-hidden="true">
     <img [src]="coverUrl()" alt="" />
   </div>

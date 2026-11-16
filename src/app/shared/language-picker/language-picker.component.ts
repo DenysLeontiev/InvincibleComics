@@ -9,6 +9,7 @@ import {
   viewChildren,
 } from '@angular/core';
 
+import { AnalyticsService } from '../../core/analytics/analytics.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { LanguageCode } from '../../core/i18n/i18n.types';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
@@ -64,6 +65,7 @@ import { IconComponent } from '../icon/icon.component';
 })
 export class LanguagePickerComponent {
   protected readonly i18n = inject(I18nService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly injector = inject(Injector);
   private readonly items = viewChildren<ElementRef<HTMLButtonElement>>('item');
@@ -85,6 +87,7 @@ export class LanguagePickerComponent {
   }
 
   protected select(code: LanguageCode): void {
+    if (code !== this.i18n.language()) this.analytics.event('language_change', { option: code });
     this.i18n.use(code);
     this.close(true);
   }

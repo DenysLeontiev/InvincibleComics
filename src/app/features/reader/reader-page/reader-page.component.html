@@ -50,7 +50,7 @@
             <app-issue-end
               [issue]="i"
               [next]="nextIssue()"
-              (openIssue)="openIssue($event)"
+              (openIssue)="openIssue($event, 'issue_end')"
               (restart)="restart()"
               (library)="back()"
             />
@@ -60,7 +60,7 @@
             class="end-slide"
             [issue]="i"
             [next]="nextIssue()"
-            (openIssue)="openIssue($event)"
+            (openIssue)="openIssue($event, 'issue_end')"
             (restart)="restart()"
             (library)="back()"
           />
@@ -90,7 +90,7 @@
       [previousIssue]="previousIssue()"
       [nextIssue]="nextIssue()"
       (seek)="seek($event)"
-      (openIssue)="openIssue($event)"
+      (openIssue)="openIssue($event, 'footer')"
       (mouseenter)="chromePointer(true)"
       (mouseleave)="chromePointer(false)"
     />

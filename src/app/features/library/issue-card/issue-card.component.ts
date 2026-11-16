@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { AnalyticsService } from '../../../core/analytics/analytics.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Issue } from '../../../core/library/library.models';
 import { LibraryService } from '../../../core/library/library.service';
@@ -24,6 +25,7 @@ import { ProgressBarComponent } from '../../../shared/progress-bar/progress-bar.
 export class IssueCardComponent {
   private readonly library = inject(LibraryService);
   private readonly progress = inject(ReadingProgressService);
+  private readonly analytics = inject(AnalyticsService);
 
   readonly issue = input.required<Issue>();
   readonly current = input(false);
@@ -39,6 +41,12 @@ export class IssueCardComponent {
     event.preventDefault();
     event.stopPropagation();
     const issue = this.issue();
-    this.progress.setCompleted(issue.id, issue.pages, !this.completed());
+    const read = !this.completed();
+    this.analytics.event('mark_read', { issue_number: issue.number, option: read ? 'read' : 'unread' });
+    this.progress.setCompleted(issue.id, issue.pages, read);
+  }
+
+  protected opened(): void {
+    this.analytics.event('open_issue', { issue_number: this.issue().number, source: 'library' });
   }
 }

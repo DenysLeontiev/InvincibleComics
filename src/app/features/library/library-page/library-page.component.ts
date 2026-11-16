@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 
+import { AnalyticsService } from '../../../core/analytics/analytics.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Issue } from '../../../core/library/library.models';
@@ -64,6 +65,7 @@ export class LibraryPageComponent {
   private readonly injector = inject(Injector);
   private readonly scrollMemory = inject(LibraryScrollMemory);
   private readonly i18n = inject(I18nService);
+  protected readonly analytics = inject(AnalyticsService);
 
   protected readonly repositoryUrl = REPOSITORY_URL;
   protected readonly readmeUrl = README_URL;
@@ -132,12 +134,14 @@ export class LibraryPageComponent {
   }
 
   protected setFilter(filter: LibraryFilter): void {
+    if (filter !== this.filter()) this.analytics.event('filter_change', { option: filter });
     this.prefs.set('libraryFilter', filter);
   }
 
   protected jumpTo(number: number): void {
     const issue = this.library.byNumber(number);
     this.jumpNotFound.set(!issue);
+    this.analytics.event('jump_to_issue', { issue_number: number, option: issue ? 'found' : 'not_found' });
     if (!issue) return;
     if (!this.groups().some((g) => g.issues.includes(issue))) this.setFilter('all');
 
@@ -156,6 +160,8 @@ export class LibraryPageComponent {
   }
 
   protected resetProgress(): void {
-    if (confirm(this.i18n.t('library.resetConfirm'))) this.progress.clearAll();
+    if (!confirm(this.i18n.t('library.resetConfirm'))) return;
+    this.analytics.event('reset_progress');
+    this.progress.clearAll();
   }
 }

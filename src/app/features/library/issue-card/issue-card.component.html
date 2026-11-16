@@ -1,5 +1,5 @@
 @let i = issue();
-<a class="card" [routerLink]="['/read', i.id]" [attr.aria-label]="'Invincible ' + (i.number | issueNumber) + ', ' + i.year + (completed() ? ', ' + ('card.readState' | t) : '')">
+<a class="card" [routerLink]="['/read', i.id]" (click)="opened()" [attr.aria-label]="'Invincible ' + (i.number | issueNumber) + ', ' + i.year + (completed() ? ', ' + ('card.readState' | t) : '')">
   <div class="cover" [style.aspect-ratio]="coverRatio()">
     <img [src]="coverUrl()" alt="" loading="lazy" decoding="async" draggable="false" [class.loaded]="loaded()" (load)="loaded.set(true)" />
 

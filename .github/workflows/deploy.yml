@@ -31,14 +31,10 @@ jobs:
         run: npm test -- --watch=false --browsers=ChromeHeadlessCI
 
       - name: Build
-        run: npx ng build --base-href "/${{ github.event.repository.name }}/"
-
-      - name: Point the app at the comic library
-        if: ${{ vars.LIBRARY_BASE_URL != '' }}
-        run: sed -i 's|<meta name="library-base-url" content="[^"]*">|<meta name="library-base-url" content="${{ vars.LIBRARY_BASE_URL }}">|' dist/InvincibleComicsReader/browser/index.html
-
-      - name: Single-page app fallback
-        run: cp dist/InvincibleComicsReader/browser/index.html dist/InvincibleComicsReader/browser/404.html
+        env:
+          GOOGLE_TAG_ID: ${{ secrets.GOOGLE_TAG_ID || vars.GOOGLE_TAG_ID }}
+          LIBRARY_BASE_URL: ${{ vars.LIBRARY_BASE_URL }}
+        run: npm run build -- --base-href "/${{ github.event.repository.name }}/"
 
       - uses: actions/configure-pages@v5
 

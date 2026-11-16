@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { AnalyticsService } from '../../../core/analytics/analytics.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslationKey } from '../../../core/i18n/i18n.types';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -27,6 +28,7 @@ const EYEBROW: Record<ContinueTarget['kind'], TranslationKey> = {
 export class ContinueCardComponent {
   private readonly library = inject(LibraryService);
   private readonly i18n = inject(I18nService);
+  private readonly analytics = inject(AnalyticsService);
 
   readonly target = input.required<ContinueTarget>();
 
@@ -39,4 +41,9 @@ export class ContinueCardComponent {
       ? this.i18n.t('continue.onPage', { page: t.page })
       : this.i18n.t('continue.startReading');
   });
+
+  protected opened(): void {
+    const { issue, kind } = this.target();
+    this.analytics.event('open_issue', { issue_number: issue.number, source: 'continue', option: kind });
+  }
 }

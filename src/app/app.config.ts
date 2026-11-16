@@ -13,6 +13,7 @@ import {
 } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideAnalytics } from './core/analytics/analytics.providers';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,5 +26,6 @@ export const appConfig: ApplicationConfig = {
       withViewTransitions({ skipInitialTransition: true }),
       withPreloading(PreloadAllModules),
     ),
+    provideAnalytics(),
   ],
 };

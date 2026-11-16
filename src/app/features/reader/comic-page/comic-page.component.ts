@@ -9,6 +9,7 @@ import {
   untracked,
 } from '@angular/core';
 
+import { AnalyticsService } from '../../../core/analytics/analytics.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Issue } from '../../../core/library/library.models';
 import { LibraryService } from '../../../core/library/library.service';
@@ -44,6 +45,7 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 export class ComicPageComponent {
   private readonly pdf = inject(PdfService);
   private readonly library = inject(LibraryService);
+  private readonly analytics = inject(AnalyticsService);
 
   readonly issue = input.required<Issue>();
   readonly page = input.required<number>();
@@ -94,7 +96,9 @@ export class ComicPageComponent {
         .catch((error: unknown) => {
           if (abort.signal.aborted || error instanceof RenderAbortedError) return;
           console.error(`Failed to render ${key}`, error);
-          if (!this.src()) this.failed.set(true);
+          if (this.src()) return;
+          this.failed.set(true);
+          this.analytics.event('page_error', { issue_number: issue.number, page_number: page });
         });
     });
   }

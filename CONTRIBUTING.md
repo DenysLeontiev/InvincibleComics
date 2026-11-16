@@ -18,12 +18,15 @@ are all welcome.
    (`COMICS_DIR="/path/to/comics" npm run library` if they are not in `C:\invincible comics`).
 4. Start the dev server: `npm start`, then open http://localhost:4200.
 5. Run the tests: `npm test`.
+6. Optional: copy `production.env` to `.env` for production builds. Use your own IDs and never commit
+   `.env`.
 
 ## Project structure
 
 ```
 src/app
 ├── core/
+│   ├── analytics/     Google Analytics loader, consent mode and event tracking
 │   ├── i18n/          translation service, `t` pipe, languages and dictionaries
 │   ├── library/       loads library.json, issue order, file URLs
 │   ├── pdf/           pdf.js loading, parallel page rendering, caching
@@ -34,7 +37,7 @@ src/app
 │   ├── library/       library page, continue card, issue cards, filters
 │   └── reader/        reader page, paged and scroll views, toolbar, scrubber, end card
 └── shared/            icons, progress bar, language picker, pipes
-scripts/               build-library.mjs and its cover-rendering worker
+scripts/               build-library.mjs, its cover worker, apply-env.mjs (writes .env into the build)
 public/flags/          language flags
 ```
 
@@ -46,6 +49,9 @@ public/flags/          language flags
   `PdfService` decodes on up to four pdf.js workers in parallel and renders the visible page first.
   It then pre-renders the rest of the issue, nearest pages first, and caches the results as images.
   That is what makes page turns instant.
+- **Analytics:** components call `AnalyticsService.event(name, params)`. Nothing is sent unless
+  `GOOGLE_TAG_ID` was set at build time, so development builds and forks send nothing. When you add
+  an event, add it to `AnalyticsEvent` in `analytics.models.ts` and to the table in the README.
 - **State:** reading progress, preferences and language live in `persistedSignal()`. It validates
   what it reads, so a broken or outdated entry never breaks the app, and it syncs across tabs.
 

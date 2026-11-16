@@ -16,6 +16,7 @@ import { DOCUMENT } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
+import { AnalyticsService } from '../../../core/analytics/analytics.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { elementSize } from '../../../core/layout/element-size';
@@ -37,6 +38,7 @@ import { ScrollViewComponent } from '../scroll-view/scroll-view.component';
 const CHROME_AUTO_HIDE_MS = 2800;
 const CHROME_HOT_ZONE_PX = 96;
 const MIN_DOUBLE_WIDTH = 720;
+const PAGE_VIEW_DELAY_MS = 1000;
 
 @Component({
   selector: 'app-reader-page',
@@ -70,6 +72,7 @@ export class ReaderPageComponent {
   private readonly title = inject(Title);
   private readonly document = inject(DOCUMENT);
   private readonly i18n = inject(I18nService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly size = elementSize();
 
   readonly id = input.required<string>();
@@ -165,7 +168,47 @@ export class ReaderPageComponent {
       const issue = this.issue();
       if (!issue || !this.doc.hasValue()) return;
       const page = this.lastVisible();
-      untracked(() => this.progress.record(issue.id, page, issue.pages));
+      untracked(() => {
+        const wasCompleted = this.progress.get(issue.id)?.completed ?? false;
+        this.progress.record(issue.id, page, issue.pages);
+        if (!wasCompleted && this.progress.get(issue.id)?.completed) {
+          this.analytics.event('issue_complete', { issue_number: issue.number, page_count: issue.pages });
+        }
+      });
+    });
+
+    let startedId: string | null = null;
+    effect(() => {
+      const issue = this.issue();
+      if (!issue || !this.doc.hasValue() || startedId === issue.id) return;
+      startedId = issue.id;
+      const page = untracked(this.page);
+      this.analytics.event('issue_start', {
+        issue_number: issue.number,
+        page_number: page,
+        page_count: issue.pages,
+        option: page > 1 ? 'resume' : 'start',
+      });
+    });
+
+    effect((onCleanup) => {
+      const issue = this.issue();
+      if (!issue || !this.doc.hasValue()) return;
+      const page = this.lastVisible();
+      const timer = setTimeout(() => {
+        this.analytics.event('comic_page', {
+          issue_number: issue.number,
+          page_number: page,
+          page_count: issue.pages,
+          progress: Math.round((page / issue.pages) * 100),
+        });
+      }, PAGE_VIEW_DELAY_MS);
+      onCleanup(() => clearTimeout(timer));
+    });
+
+    effect(() => {
+      const issue = this.issue();
+      if (issue && this.doc.error()) untracked(() => this.analytics.event('issue_error', { issue_number: issue.number }));
     });
 
     effect(() => {
@@ -184,7 +227,7 @@ export class ReaderPageComponent {
     this.dismissHints();
     if (this.atEnd()) {
       const next = this.nextIssue();
-      if (next) this.openIssue(next);
+      if (next) this.openIssue(next, 'next_page');
       return;
     }
     if (this.layout() === 'scroll') {
@@ -235,7 +278,8 @@ export class ReaderPageComponent {
     this.seek(1);
   }
 
-  protected openIssue(issue: Issue): void {
+  protected openIssue(issue: Issue, source: string): void {
+    this.analytics.event('open_issue', { issue_number: issue.number, source });
     void this.router.navigate(['/read', issue.id]);
   }
 
@@ -254,11 +298,13 @@ export class ReaderPageComponent {
 
   protected setLayout(layout: ReaderLayout): void {
     this.atEnd.set(false);
+    if (layout !== this.prefs.layout()) this.analytics.event('layout_change', { option: layout });
     this.prefs.set('layout', layout);
     this.showChrome();
   }
 
   protected setFit(fit: ReaderFit): void {
+    if (fit !== this.prefs.fit()) this.analytics.event('fit_change', { option: fit });
     this.prefs.set('fit', fit);
     this.showChrome();
   }
@@ -314,7 +360,9 @@ export class ReaderPageComponent {
   }
 
   protected syncFullscreen(): void {
-    this.fullscreen.set(!!this.document.fullscreenElement);
+    const fullscreen = !!this.document.fullscreenElement;
+    if (fullscreen !== this.fullscreen()) this.analytics.event('fullscreen', { option: fullscreen ? 'on' : 'off' });
+    this.fullscreen.set(fullscreen);
   }
 
   protected onKeydown(event: KeyboardEvent): void {
