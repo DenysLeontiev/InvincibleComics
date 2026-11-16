@@ -1,0 +1,107 @@
+:host {
+  position: relative;
+  display: block;
+  flex: none;
+  overflow: hidden;
+  background: #15181f;
+  contain: strict;
+}
+
+:host(.ready) {
+  background: #fff;
+}
+
+img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+.thumb {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+}
+
+.placeholder.subtle {
+  place-items: end;
+  padding: 0.75rem;
+  background: none;
+  animation: none;
+
+  .spinner {
+    inline-size: 20px;
+    block-size: 20px;
+    border-width: 2px;
+  }
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(100deg, #14171e 30%, #1c2029 50%, #14171e 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.spinner {
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: 50%;
+  border: 3px solid rgb(255 255 255 / 0.1);
+  border-top-color: var(--yellow);
+  opacity: 0;
+  animation:
+    spin 800ms linear infinite,
+    appear 200ms 400ms forwards;
+}
+
+.error {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 0.75rem;
+  justify-items: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+    --icon-size: 0.9rem;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes appear {
+  to {
+    opacity: 1;
+  }
+}

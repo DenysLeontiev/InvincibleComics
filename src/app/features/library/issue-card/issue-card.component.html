@@ -1,0 +1,36 @@
+@let i = issue();
+<a class="card" [routerLink]="['/read', i.id]" [attr.aria-label]="'Invincible ' + (i.number | issueNumber) + ', ' + i.year + (completed() ? ', read' : '')">
+  <div class="cover" [style.aspect-ratio]="coverRatio()">
+    <img [src]="coverUrl()" alt="" loading="lazy" decoding="async" draggable="false" [class.loaded]="loaded()" (load)="loaded.set(true)" />
+
+    @if (completed()) {
+      <span class="badge read-badge" title="Read"><app-icon name="check" /></span>
+    } @else if (state(); as s) {
+      <span class="badge reading-badge">{{ s.page }}/{{ i.pages }}</span>
+    }
+
+    @if (i.variantCovers > 1) {
+      <span class="variants" title="Includes variant covers"><app-icon name="layers" />{{ i.variantCovers }}</span>
+    }
+
+    @if (fraction() > 0 && !completed()) {
+      <app-progress-bar class="progress" [value]="fraction()" />
+    }
+  </div>
+
+  <div class="caption">
+    <span class="number">{{ i.number | issueNumber }}</span>
+    <span class="year">{{ i.year }}</span>
+  </div>
+</a>
+
+<button
+  type="button"
+  class="toggle"
+  [attr.aria-pressed]="completed()"
+  [attr.aria-label]="completed() ? 'Mark as unread' : 'Mark as read'"
+  [title]="completed() ? 'Mark as unread' : 'Mark as read'"
+  (click)="toggleRead($event)"
+>
+  <app-icon [name]="completed() ? 'check-circle' : 'circle'" />
+</button>

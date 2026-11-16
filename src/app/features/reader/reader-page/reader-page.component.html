@@ -1,0 +1,123 @@
+@if (issue(); as current) {
+  <app-reader-toolbar
+    class="chrome top"
+    [issue]="current"
+    [layout]="preferredLayout()"
+    [fit]="fit()"
+    [fullscreen]="fullscreen()"
+    [canDouble]="canDouble()"
+    (back)="back()"
+    (layoutChange)="setLayout($event)"
+    (fitChange)="setFit($event)"
+    (toggleFullscreen)="toggleFullscreen()"
+    (mouseenter)="chromePointer(true)"
+    (mouseleave)="chromePointer(false)"
+  />
+
+  <div class="stage">
+    @if (doc.error()) {
+      <div class="center-panel" role="alert">
+        <h2>Couldn't open {{ current.number | issueNumber }}</h2>
+        <p>The file didn't load. Check your connection and try again.</p>
+        <div class="row">
+          <button type="button" class="primary" (click)="retry()"><app-icon name="refresh" /> Try again</button>
+          <button type="button" class="ghost" (click)="back()">Back to library</button>
+        </div>
+      </div>
+    } @else if (!doc.hasValue()) {
+      <div class="center-panel loading" aria-live="polite">
+        <img class="loading-cover" [src]="coverUrl()" alt="" width="480" height="738" />
+        <p class="loading-label">
+          Opening <strong>Invincible {{ current.number | issueNumber }}</strong>
+          @if (loadProgress() > 0 && loadProgress() < 1) {
+            <span class="percent">{{ (loadProgress() * 100).toFixed(0) }}%</span>
+          }
+        </p>
+        <app-progress-bar class="loading-bar" [value]="loadProgress()" />
+      </div>
+    } @else {
+      @for (i of [current]; track i.id) {
+        @if (layout() === 'scroll') {
+          <app-scroll-view
+            tabindex="-1"
+            [issue]="i"
+            [fit]="fit()"
+            [initialPage]="page()"
+            (pageChange)="onScrollPage($event)"
+            (scrolled)="onScrolled($event)"
+            (toggleChrome)="toggleChrome()"
+          >
+            <app-issue-end
+              [issue]="i"
+              [next]="nextIssue()"
+              (openIssue)="openIssue($event)"
+              (restart)="restart()"
+              (library)="back()"
+            />
+          </app-scroll-view>
+        } @else if (atEnd()) {
+          <app-issue-end
+            class="end-slide"
+            [issue]="i"
+            [next]="nextIssue()"
+            (openIssue)="openIssue($event)"
+            (restart)="restart()"
+            (library)="back()"
+          />
+        } @else {
+          <app-paged-view
+            tabindex="-1"
+            [issue]="i"
+            [views]="views()"
+            [viewIndex]="viewIndex()"
+            [fit]="fit()"
+            [direction]="direction()"
+            (next)="next()"
+            (previous)="previous()"
+            (toggleChrome)="toggleChrome()"
+          />
+        }
+      }
+    }
+  </div>
+
+  @if (doc.hasValue()) {
+    <app-reader-footer
+      class="chrome bottom"
+      [page]="firstVisible()"
+      [lastVisible]="lastVisible()"
+      [pages]="current.pages"
+      [previousIssue]="previousIssue()"
+      [nextIssue]="nextIssue()"
+      (seek)="seek($event)"
+      (openIssue)="openIssue($event)"
+      (mouseenter)="chromePointer(true)"
+      (mouseleave)="chromePointer(false)"
+    />
+  }
+
+  @if (showHints()) {
+    <div class="hints" role="dialog" aria-label="How to read" (click)="dismissHints()">
+      <div class="hints-card" (click)="$event.stopPropagation()">
+        <h2>How to read</h2>
+        <ul>
+          <li><span class="key">Tap / click right edge</span> next page</li>
+          <li><span class="key">Tap / click left edge</span> previous page</li>
+          <li><span class="key">Tap the middle</span> show or hide controls</li>
+          <li><span class="key">Swipe</span> turn pages on touch screens</li>
+          <li><span class="key">← → · Space · F</span> keyboard shortcuts</li>
+        </ul>
+        <p class="hint-note">Your place is saved automatically.</p>
+        <button type="button" class="primary" (click)="dismissHints()">Got it</button>
+      </div>
+    </div>
+  }
+} @else if (notFound() || libraryError()) {
+  <div class="center-panel" role="alert">
+    <h2>{{ libraryError() ? "Couldn't load the library" : 'Issue not found' }}</h2>
+    <p>{{ libraryError() ? 'Check your connection and try again.' : "This issue isn't in the library." }}</p>
+    <button type="button" class="primary" (click)="back()"><app-icon name="library" /> Go to library</button>
+  </div>
+} @else {
+  <div class="center-panel"><span class="spinner" aria-label="Loading"></span></div>
+}

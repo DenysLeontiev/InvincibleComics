@@ -1,0 +1,84 @@
+<header class="masthead">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">I</span>
+    <div>
+      <h1 class="wordmark">Invincible</h1>
+      <p class="tagline">The complete series · {{ stats().total }} issues</p>
+    </div>
+  </div>
+
+  @if (library.isReady() && stats().read + stats().reading > 0) {
+    <div class="overall" [attr.aria-label]="stats().read + ' of ' + stats().total + ' issues read'">
+      <span class="overall-label">
+        <strong>{{ stats().read }}</strong> / {{ stats().total }} read
+      </span>
+      <app-progress-bar [value]="stats().total ? stats().read / stats().total : 0" />
+    </div>
+  }
+</header>
+
+<main class="content">
+  @if (library.error()) {
+    <section class="state" role="alert">
+      <h2>Couldn't load the library</h2>
+      <p>Check your connection and try again. If you're running the app locally, run <code>npm run library</code> first.</p>
+      <button type="button" class="retry" (click)="library.reload()">
+        <app-icon name="refresh" /> Try again
+      </button>
+    </section>
+  } @else if (!library.isReady()) {
+    <div class="skeleton-hero" aria-hidden="true"></div>
+    <div class="grid" aria-busy="true" aria-label="Loading issues">
+      @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; track i) {
+        <div class="skeleton-card"></div>
+      }
+    </div>
+  } @else {
+    @if (continueTarget(); as target) {
+      <app-continue-card class="hero" [target]="target" />
+    }
+
+    <app-library-toolbar
+      class="toolbar"
+      [options]="filterOptions()"
+      [filter]="filter()"
+      [notFound]="jumpNotFound()"
+      (filterChange)="setFilter($event)"
+      (jump)="jumpTo($event)"
+    />
+
+    @for (group of groups(); track group.year) {
+      <section class="year" [attr.aria-labelledby]="'year-' + group.year">
+        <h2 class="year-title" [id]="'year-' + group.year">
+          {{ group.year }}
+          <span class="year-count">{{ group.issues.length }} {{ group.issues.length === 1 ? 'issue' : 'issues' }}</span>
+        </h2>
+        <div class="grid">
+          @for (issue of group.issues; track issue.id) {
+            <app-issue-card [issue]="issue" [current]="issue.id === currentId()" />
+          }
+        </div>
+      </section>
+    } @empty {
+      <section class="state">
+        <h2>Nothing here yet</h2>
+        <p>
+          @switch (filter()) {
+            @case ('reading') { Issues you've started will show up here. }
+            @case ('read') { Finished issues will show up here. }
+            @default { You've read everything. Legendary. }
+          }
+        </p>
+        <button type="button" class="retry" (click)="setFilter('all')">Show all issues</button>
+      </section>
+    }
+
+    @if (stats().read + stats().reading > 0) {
+      <footer class="footer">
+        <button type="button" class="link" (click)="resetProgress()">
+          <app-icon name="rotate-ccw" /> Reset reading progress
+        </button>
+      </footer>
+    }
+  }
+</main>

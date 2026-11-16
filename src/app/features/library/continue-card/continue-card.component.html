@@ -1,0 +1,33 @@
+@let t = target();
+<a class="card" [routerLink]="['/read', t.issue.id]" [attr.aria-label]="action() + ': Invincible ' + (t.issue.number | issueNumber)">
+  <div class="backdrop" aria-hidden="true">
+    <img [src]="coverUrl()" alt="" />
+  </div>
+
+  <div class="cover">
+    <img [src]="coverUrl()" alt="" width="480" height="738" fetchpriority="high" />
+  </div>
+
+  <div class="body">
+    <p class="eyebrow">{{ eyebrow() }}</p>
+    <h2 class="title">
+      <span class="series">Invincible</span>
+      <span class="number">{{ t.issue.number | issueNumber }}</span>
+    </h2>
+    <p class="meta">
+      {{ t.issue.year }} · {{ t.issue.pages }} pages
+      @if (t.kind === 'resume' || (t.kind === 'next' && t.page > 1)) {
+        · page {{ t.page }} of {{ t.issue.pages }}
+      }
+    </p>
+
+    @if (t.fraction > 0 && t.fraction < 1) {
+      <app-progress-bar class="progress" [value]="t.fraction" />
+    }
+
+    <span class="button">
+      <app-icon name="play" />
+      {{ action() }}
+    </span>
+  </div>
+</a>

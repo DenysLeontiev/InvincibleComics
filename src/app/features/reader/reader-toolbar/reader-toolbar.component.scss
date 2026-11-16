@@ -1,0 +1,117 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 1.75rem
+    max(1rem, env(safe-area-inset-left));
+  background: linear-gradient(rgb(7 9 14 / 0.92), rgb(7 9 14 / 0.6) 60%, transparent);
+  color: var(--text);
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-inline-size: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.series {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.number {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.year {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.segmented {
+  display: flex;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid var(--border);
+
+  .icon-button {
+    inline-size: 2.2rem;
+    block-size: 2.2rem;
+    background: transparent;
+
+    &[aria-checked='true'] {
+      background: var(--yellow);
+      color: #111;
+    }
+  }
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.06);
+  color: var(--text);
+  cursor: pointer;
+  --icon-size: 1.15rem;
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: rgb(255 255 255 / 0.14);
+  }
+
+  &[aria-pressed='true'] {
+    color: var(--blue);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.segmented .icon-button[aria-checked='true']:hover {
+  background: var(--yellow-strong);
+}
+
+@media (max-width: 540px) {
+  .year {
+    display: none;
+  }
+
+  .series {
+    font-size: 1.1rem;
+  }
+
+  .number {
+    font-size: 1.1rem;
+  }
+
+  .segmented button:nth-child(2) {
+    display: none;
+  }
+}

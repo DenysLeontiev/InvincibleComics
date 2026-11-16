@@ -1,0 +1,217 @@
+:host {
+  display: block;
+  --page-gutter: clamp(1rem, 4vw, 3rem);
+  max-inline-size: 1440px;
+  margin-inline: auto;
+  padding: 0 var(--page-gutter) 4rem;
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  padding-block: clamp(1.5rem, 4vw, 2.75rem) clamp(1.25rem, 3vw, 2rem);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(135deg, var(--yellow) 0 55%, var(--blue) 55% 100%);
+  color: #0a0d14;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  line-height: 1;
+  box-shadow: 0 10px 30px -10px rgb(255 224 27 / 0.6);
+}
+
+.wordmark {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.75rem, 3.4vw, 2.4rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.tagline {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.overall {
+  display: grid;
+  gap: 0.4rem;
+  inline-size: min(240px, 100%);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  --progress-color: var(--blue);
+
+  strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+}
+
+.overall-label {
+  font-variant-numeric: tabular-nums;
+}
+
+.hero {
+  margin-block-end: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.toolbar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 5;
+  margin-inline: calc(var(--page-gutter) * -1);
+  padding: 0.75rem var(--page-gutter);
+  background: linear-gradient(var(--bg) 70%, transparent);
+}
+
+.year {
+  margin-block-start: 1.75rem;
+}
+
+.year-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.6rem;
+  letter-spacing: 0.03em;
+  color: var(--text);
+
+  &::after {
+    content: '';
+    flex: 1;
+    block-size: 1px;
+    background: var(--border);
+    align-self: center;
+  }
+}
+
+.year-count {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(120px, 15vw, 172px), 1fr));
+  gap: clamp(1rem, 2.2vw, 1.75rem) clamp(0.8rem, 1.8vw, 1.5rem);
+}
+
+.state {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 4rem 1rem;
+  text-align: center;
+
+  h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 2rem;
+    letter-spacing: 0.02em;
+    color: var(--yellow);
+  }
+
+  p {
+    margin: 0;
+    max-inline-size: 42ch;
+    color: var(--text-muted);
+  }
+
+  code {
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    background: var(--surface-2);
+    color: var(--text);
+  }
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block-start: 1rem;
+  padding: 0.7rem 1.2rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: #111;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  --icon-size: 1rem;
+}
+
+.skeleton-hero,
+.skeleton-card {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(100deg, var(--surface) 30%, var(--surface-2) 50%, var(--surface) 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.skeleton-hero {
+  block-size: clamp(220px, 32vw, 330px);
+  margin-block-end: 2.5rem;
+}
+
+.skeleton-card {
+  aspect-ratio: 0.65;
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  margin-block-start: 4rem;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  --icon-size: 0.9rem;
+
+  &:hover {
+    color: var(--red);
+  }
+}

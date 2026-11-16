@@ -1,59 +1,76 @@
-# InvincibleComicsReader
+# Invincible Comic Reader
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.4.
+A fast, minimal, Invincible-themed web reader for the complete comic series. No accounts: everything
+(reading position, finished issues, layout preferences) is remembered in the browser.
 
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Getting started
 
 ```bash
-ng generate component component-name
+npm install
+npm run library   # index the PDFs, render cover thumbnails (first run takes a few minutes)
+npm start         # http://localhost:4200
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+`npm run library` reads the PDFs from `C:\invincible comics` by default. Point it elsewhere with
+`COMICS_DIR`:
 
 ```bash
-ng generate --help
+COMICS_DIR="D:\comics\invincible" npm run library
 ```
 
-## Building
+It creates `public/library/` (ignored by git):
 
-To build the project run:
+| Path                  | What                                                              |
+| --------------------- | ----------------------------------------------------------------- |
+| `library.json`        | Manifest: issue number, year, page count, page aspect ratios      |
+| `covers/<id>.webp`    | 480 px cover thumbnails                                           |
+| `issues/<id>.pdf`     | The PDFs under clean names (hard links, so no extra disk space)   |
 
-```bash
-ng build
+The step is incremental: re-running it only processes new or changed files.
+
+## Using the reader
+
+- **Turn pages**: click/tap the right or left edge, swipe, or use `←` `→` / `Space`.
+- **Controls**: tap the middle of the page (they hide themselves while you read).
+- **Layouts**: single page, two-page spreads (wide screens), or continuous vertical scroll.
+- **Fit**: whole page, or fit to width.
+- **Keyboard**: `Home`/`End` first/last page, `F` full screen, `Esc` back to the library.
+- At the end of an issue the next one is one click away (and already downloaded).
+
+## How it works
+
+- **Angular 20**: standalone components, signals everywhere (`computed`, `linkedSignal`,
+  `resource`/`httpResource`), zoneless change detection, OnPush, lazy routes, view transitions.
+- **pdf.js** renders the PDFs. The scans are JPEG 2000 + JBIG2, which take ~1–2 s per page to
+  decode, so `PdfService`:
+  - decodes on up to 4 workers in parallel,
+  - renders what's on screen first, then pre-renders the rest of the issue nearest-first,
+  - caches rendered pages, so page turns and jumps are instant after the first page,
+  - starts downloading the next issue as you approach the end.
+- **Persistence**: `persistedSignal()` is a validated, localStorage-backed signal kept in sync
+  across tabs. It falls back to memory when storage is unavailable.
+
+```
+src/app
+├── core/          services: library manifest, pdf rendering, progress, preferences, storage
+├── features/
+│   ├── library/   library page, continue-reading hero, issue cards, filters
+│   └── reader/    reader page, paged view, scroll view, toolbar, scrubber, end-of-issue card
+└── shared/        icons, progress bar, pipes
+scripts/           build-library.mjs (+ worker) — generates public/library
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Scripts
 
-## Running unit tests
+| Command           | Description                                 |
+| ----------------- | ------------------------------------------- |
+| `npm run library` | Build the comic library from the PDFs       |
+| `npm start`       | Dev server                                  |
+| `npm run build`   | Production build to `dist/`                 |
+| `npm test`        | Unit tests (Karma + Jasmine)                |
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Hosting the library elsewhere
 
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+The app loads everything from `library/` next to `index.html`. To serve the PDFs from a CDN or bucket
+instead, change `LIBRARY_BASE_URL` in `src/app/core/library/library.config.ts`. The host must allow
+CORS and HTTP range requests.
