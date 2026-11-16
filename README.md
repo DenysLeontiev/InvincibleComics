@@ -64,11 +64,9 @@ The first run takes a few minutes. Later runs only process new or changed files.
 Every push to `main` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It runs the
 tests, builds the app and publishes it to GitHub Pages.
 
-The comics are **not** stored in this repository. To show comics on a deployed site, upload the
-contents of `public/library/` to any static host you are allowed to share them from. The host must
-allow CORS and HTTP range requests. Then set a repository variable named `LIBRARY_BASE_URL` to that
-address (**Settings → Secrets and variables → Actions → Variables**) and re-run the workflow. Without
-it, the site shows a "No comics connected yet" message.
+The comic library is bundled in `public/library/` and published with the app. To serve the comics from an
+external static host instead, set a repository variable named `LIBRARY_BASE_URL` to that address
+(**Settings → Secrets and variables → Actions → Variables**) and re-run the workflow.
 
 ## License and content
 
