@@ -54,8 +54,8 @@ export class LibraryService {
     return this.offset(id, -1);
   }
 
-  pdfUrl(issue: Issue): string {
-    return `${this.baseUrl}${issue.file}`;
+  pageUrl(issue: Issue, page: number): string {
+    return `${this.baseUrl}${issue.pagesPath}${String(page).padStart(3, '0')}.webp?v=${issue.fingerprint}`;
   }
 
   coverUrl(issue: Issue): string {

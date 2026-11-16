@@ -4,7 +4,6 @@ export type AnalyticsEvent =
   | 'issue_start'
   | 'comic_page'
   | 'issue_complete'
-  | 'issue_error'
   | 'page_error'
   | 'layout_change'
   | 'fit_change'

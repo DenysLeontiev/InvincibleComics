@@ -40,15 +40,17 @@ somewhere else:
 COMICS_DIR="/path/to/comics" npm run library
 ```
 
-It creates `public/library/` (not committed to git):
+It creates `public/library/`:
 
-| Path               | Contents                                                        |
-| ------------------ | --------------------------------------------------------------- |
-| `library.json`     | Issue numbers, years, page counts and page sizes                |
-| `covers/<id>.webp` | Cover thumbnails                                                |
-| `issues/<id>.pdf`  | The PDFs under clean names (hard links, so no extra disk space) |
+| Path                     | Contents                                                  |
+| ------------------------ | --------------------------------------------------------- |
+| `library.json`           | Issue numbers, years, page counts and page sizes          |
+| `covers/<id>.webp`       | Cover thumbnails                                          |
+| `pages/<id>/<page>.webp` | Every page rendered from the PDF, 1600 px tall, WebP q75 |
 
-The first run takes a few minutes. Later runs only process new or changed files.
+The PDFs themselves are not published: browsers can't decode their JPEG 2000 scans quickly, so the
+reader shows the pre-rendered pages instead. The first run takes a few minutes. Later runs only
+process new or changed files.
 
 ## Scripts
 
@@ -99,7 +101,7 @@ When `GOOGLE_TAG_ID` is set, the app loads Google Analytics and reports:
 | `mark_read`       | An issue was marked read or unread               | `issue_number`, `option`                       |
 | `reset_progress`  | Reading progress was reset                       |                                                |
 | `github_click`    | A GitHub link was clicked                        | `source`                                       |
-| `issue_error`, `page_error`, `app_error` | Something failed to load or crashed | `issue_number`, `page_number`, `option` |
+| `page_error`, `app_error` | Something failed to load or crashed | `issue_number`, `page_number`, `option` |
 
 Google Analytics adds location (country and city), device, browser, sessions and real-time users on
 its own.

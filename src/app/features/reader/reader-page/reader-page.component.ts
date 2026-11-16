@@ -7,7 +7,6 @@ import {
   inject,
   input,
   linkedSignal,
-  resource,
   signal,
   untracked,
   viewChild,
@@ -22,12 +21,10 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { elementSize } from '../../../core/layout/element-size';
 import { Issue } from '../../../core/library/library.models';
 import { LibraryService } from '../../../core/library/library.service';
-import { PdfService } from '../../../core/pdf/pdf.service';
+import { PageImagesService } from '../../../core/pages/page-images.service';
 import { PreferencesService, ReaderFit, ReaderLayout } from '../../../core/preferences/preferences.service';
 import { ReadingProgressService } from '../../../core/progress/reading-progress.service';
 import { IconComponent } from '../../../shared/icon/icon.component';
-import { IssueNumberPipe } from '../../../shared/issue-number.pipe';
-import { ProgressBarComponent } from '../../../shared/progress-bar/progress-bar.component';
 import { IssueEndComponent } from '../issue-end/issue-end.component';
 import { PagedViewComponent } from '../paged-view/paged-view.component';
 import { ReaderFooterComponent } from '../reader-footer/reader-footer.component';
@@ -39,6 +36,7 @@ const CHROME_AUTO_HIDE_MS = 2800;
 const CHROME_HOT_ZONE_PX = 96;
 const MIN_DOUBLE_WIDTH = 720;
 const PAGE_VIEW_DELAY_MS = 1000;
+const NEXT_ISSUE_PREFETCH_PAGES = 2;
 
 @Component({
   selector: 'app-reader-page',
@@ -46,9 +44,7 @@ const PAGE_VIEW_DELAY_MS = 1000;
   imports: [
     IconComponent,
     IssueEndComponent,
-    IssueNumberPipe,
     PagedViewComponent,
-    ProgressBarComponent,
     ReaderFooterComponent,
     ReaderToolbarComponent,
     ScrollViewComponent,
@@ -67,7 +63,7 @@ export class ReaderPageComponent {
   private readonly library = inject(LibraryService);
   private readonly progress = inject(ReadingProgressService);
   private readonly prefs = inject(PreferencesService);
-  private readonly pdf = inject(PdfService);
+  private readonly images = inject(PageImagesService);
   private readonly router = inject(Router);
   private readonly title = inject(Title);
   private readonly document = inject(DOCUMENT);
@@ -85,22 +81,6 @@ export class ReaderPageComponent {
   protected readonly libraryError = this.library.error;
   protected readonly previousIssue = computed(() => this.library.previous(this.id()));
   protected readonly nextIssue = computed(() => this.library.next(this.id()));
-  protected readonly coverUrl = computed(() => {
-    const issue = this.issue();
-    return issue ? this.library.coverUrl(issue) : '';
-  });
-
-  private readonly retries = signal(0);
-  private readonly opened = computed(() => {
-    this.retries();
-    const issue = this.issue();
-    return issue ? this.pdf.open(issue) : undefined;
-  });
-  protected readonly doc = resource({
-    params: () => this.opened(),
-    loader: ({ params }) => params.doc,
-  });
-  protected readonly loadProgress = computed(() => this.opened()?.progress() ?? 0);
 
   protected readonly canDouble = computed(() => {
     const { width, height } = this.size();
@@ -142,10 +122,10 @@ export class ReaderPageComponent {
 
   private readonly chromeVisible = signal(true);
   protected readonly chromeShown = computed(
-    () => this.chromeVisible() || !this.doc.hasValue() || (this.atEnd() && this.layout() !== 'scroll'),
+    () => this.chromeVisible() || (this.atEnd() && this.layout() !== 'scroll'),
   );
   protected readonly fullscreen = signal(false);
-  protected readonly showHints = computed(() => !this.prefs.hintsSeen() && this.doc.hasValue());
+  protected readonly showHints = computed(() => !this.prefs.hintsSeen() && !!this.issue());
   private hideTimer: ReturnType<typeof setTimeout> | undefined;
   private pointerOnChrome = false;
 
@@ -166,7 +146,7 @@ export class ReaderPageComponent {
 
     effect(() => {
       const issue = this.issue();
-      if (!issue || !this.doc.hasValue()) return;
+      if (!issue) return;
       const page = this.lastVisible();
       untracked(() => {
         const wasCompleted = this.progress.get(issue.id)?.completed ?? false;
@@ -180,7 +160,7 @@ export class ReaderPageComponent {
     let startedId: string | null = null;
     effect(() => {
       const issue = this.issue();
-      if (!issue || !this.doc.hasValue() || startedId === issue.id) return;
+      if (!issue || startedId === issue.id) return;
       startedId = issue.id;
       const page = untracked(this.page);
       this.analytics.event('issue_start', {
@@ -193,7 +173,7 @@ export class ReaderPageComponent {
 
     effect((onCleanup) => {
       const issue = this.issue();
-      if (!issue || !this.doc.hasValue()) return;
+      if (!issue) return;
       const page = this.lastVisible();
       const timer = setTimeout(() => {
         this.analytics.event('comic_page', {
@@ -206,20 +186,18 @@ export class ReaderPageComponent {
       onCleanup(() => clearTimeout(timer));
     });
 
-    effect(() => {
-      const issue = this.issue();
-      if (issue && this.doc.error()) untracked(() => this.analytics.event('issue_error', { issue_number: issue.number }));
-    });
-
-    effect(() => {
+    effect((onCleanup) => {
       const issue = this.issue();
       const next = this.nextIssue();
-      if (!issue || !next || !this.doc.hasValue()) return;
-      if (this.atEnd() || this.lastVisible() >= issue.pages - 3) this.pdf.preload(next);
+      if (!issue || !next) return;
+      if (!this.atEnd() && this.lastVisible() < issue.pages - 3) return;
+      const abort = new AbortController();
+      onCleanup(() => abort.abort());
+      this.images.prefetch(next, [1, 2].slice(0, NEXT_ISSUE_PREFETCH_PAGES), abort.signal);
     });
 
     effect(() => {
-      if (this.doc.hasValue()) untracked(() => this.showChrome());
+      if (this.issue()) untracked(() => this.showChrome());
     });
   }
 
@@ -307,10 +285,6 @@ export class ReaderPageComponent {
     if (fit !== this.prefs.fit()) this.analytics.event('fit_change', { option: fit });
     this.prefs.set('fit', fit);
     this.showChrome();
-  }
-
-  protected retry(): void {
-    this.retries.update((n) => n + 1);
   }
 
   protected toggleChrome(): void {

@@ -29,7 +29,7 @@ src/app
 │   ├── analytics/     Google Analytics loader, consent mode and event tracking
 │   ├── i18n/          translation service, `t` pipe, languages and dictionaries
 │   ├── library/       loads library.json, issue order, file URLs
-│   ├── pdf/           pdf.js loading, parallel page rendering, caching
+│   ├── pages/         page image URLs, prefetching, caching
 │   ├── preferences/   reader layout, fit and filter, saved in the browser
 │   ├── progress/      reading position and finished issues, saved in the browser
 │   └── storage/       persistedSignal(): a localStorage-backed signal
@@ -37,7 +37,7 @@ src/app
 │   ├── library/       library page, continue card, issue cards, filters
 │   └── reader/        reader page, paged and scroll views, toolbar, scrubber, end card
 └── shared/            icons, progress bar, language picker, pipes
-scripts/               build-library.mjs, its cover worker, apply-env.mjs (writes .env into the build)
+scripts/               build-library.mjs, its page render worker, apply-env.mjs (writes .env into the build)
 public/flags/          language flags
 ```
 
@@ -45,10 +45,9 @@ public/flags/          language flags
 
 - **Angular 20** with standalone components, signals (`computed`, `linkedSignal`, `resource`,
   `httpResource`), zoneless change detection and OnPush everywhere. Routes are lazy-loaded.
-- **Rendering:** the PDFs are compressed scans that take about 1–2 seconds per page to decode.
-  `PdfService` decodes on up to four pdf.js workers in parallel and renders the visible page first.
-  It then pre-renders the rest of the issue, nearest pages first, and caches the results as images.
-  That is what makes page turns instant.
+- **Pages:** the PDFs are JPEG 2000 + JBIG2 scans that take about a second per page to decode, so
+  `npm run library` renders every page to WebP ahead of time. The reader only loads images:
+  `PageImagesService` prefetches the next few pages in the background, so page turns are instant.
 - **Analytics:** components call `AnalyticsService.event(name, params)`. Nothing is sent unless
   `GOOGLE_TAG_ID` was set at build time, so development builds and forks send nothing. When you add
   an event, add it to `AnalyticsEvent` in `analytics.models.ts` and to the table in the README.

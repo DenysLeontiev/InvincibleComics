@@ -15,86 +15,62 @@
   />
 
   <div class="stage">
-    @if (doc.error()) {
-      <div class="center-panel" role="alert">
-        <h2>{{ 'reader.openError' | t: { issue: (current.number | issueNumber) } }}</h2>
-        <p>{{ 'reader.openErrorText' | t }}</p>
-        <div class="row">
-          <button type="button" class="primary" (click)="retry()"><app-icon name="refresh" /> {{ 'common.tryAgain' | t }}</button>
-          <button type="button" class="ghost" (click)="back()">{{ 'common.backToLibrary' | t }}</button>
-        </div>
-      </div>
-    } @else if (!doc.hasValue()) {
-      <div class="center-panel loading" aria-live="polite">
-        <img class="loading-cover" [src]="coverUrl()" alt="" width="480" height="738" />
-        <p class="loading-label">
-          {{ 'reader.opening' | t }} <strong>Invincible {{ current.number | issueNumber }}</strong>
-          @if (loadProgress() > 0 && loadProgress() < 1) {
-            <span class="percent">{{ (loadProgress() * 100).toFixed(0) }}%</span>
-          }
-        </p>
-        <app-progress-bar class="loading-bar" [value]="loadProgress()" />
-      </div>
-    } @else {
-      @for (i of [current]; track i.id) {
-        @if (layout() === 'scroll') {
-          <app-scroll-view
-            tabindex="-1"
-            [issue]="i"
-            [fit]="fit()"
-            [initialPage]="page()"
-            (pageChange)="onScrollPage($event)"
-            (scrolled)="onScrolled($event)"
-            (toggleChrome)="toggleChrome()"
-          >
-            <app-issue-end
-              [issue]="i"
-              [next]="nextIssue()"
-              (openIssue)="openIssue($event, 'issue_end')"
-              (restart)="restart()"
-              (library)="back()"
-            />
-          </app-scroll-view>
-        } @else if (atEnd()) {
+    @for (i of [current]; track i.id) {
+      @if (layout() === 'scroll') {
+        <app-scroll-view
+          tabindex="-1"
+          [issue]="i"
+          [fit]="fit()"
+          [initialPage]="page()"
+          (pageChange)="onScrollPage($event)"
+          (scrolled)="onScrolled($event)"
+          (toggleChrome)="toggleChrome()"
+        >
           <app-issue-end
-            class="end-slide"
             [issue]="i"
             [next]="nextIssue()"
             (openIssue)="openIssue($event, 'issue_end')"
             (restart)="restart()"
             (library)="back()"
           />
-        } @else {
-          <app-paged-view
-            tabindex="-1"
-            [issue]="i"
-            [views]="views()"
-            [viewIndex]="viewIndex()"
-            [fit]="fit()"
-            [direction]="direction()"
-            (next)="next()"
-            (previous)="previous()"
-            (toggleChrome)="toggleChrome()"
-          />
-        }
+        </app-scroll-view>
+      } @else if (atEnd()) {
+        <app-issue-end
+          class="end-slide"
+          [issue]="i"
+          [next]="nextIssue()"
+          (openIssue)="openIssue($event, 'issue_end')"
+          (restart)="restart()"
+          (library)="back()"
+        />
+      } @else {
+        <app-paged-view
+          tabindex="-1"
+          [issue]="i"
+          [views]="views()"
+          [viewIndex]="viewIndex()"
+          [fit]="fit()"
+          [direction]="direction()"
+          (next)="next()"
+          (previous)="previous()"
+          (toggleChrome)="toggleChrome()"
+        />
       }
     }
   </div>
 
-  @if (doc.hasValue()) {
-    <app-reader-footer
-      class="chrome bottom"
-      [page]="firstVisible()"
-      [lastVisible]="lastVisible()"
-      [pages]="current.pages"
-      [previousIssue]="previousIssue()"
-      [nextIssue]="nextIssue()"
-      (seek)="seek($event)"
-      (openIssue)="openIssue($event, 'footer')"
-      (mouseenter)="chromePointer(true)"
-      (mouseleave)="chromePointer(false)"
-    />
-  }
+  <app-reader-footer
+    class="chrome bottom"
+    [page]="firstVisible()"
+    [lastVisible]="lastVisible()"
+    [pages]="current.pages"
+    [previousIssue]="previousIssue()"
+    [nextIssue]="nextIssue()"
+    (seek)="seek($event)"
+    (openIssue)="openIssue($event, 'footer')"
+    (mouseenter)="chromePointer(true)"
+    (mouseleave)="chromePointer(false)"
+  />
 
   @if (showHints()) {
     <div class="hints" role="dialog" [attr.aria-label]="'hints.title' | t" (click)="dismissHints()">

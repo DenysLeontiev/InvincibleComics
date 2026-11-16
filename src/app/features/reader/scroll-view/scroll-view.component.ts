@@ -15,13 +15,14 @@ import {
 
 import { elementSize } from '../../../core/layout/element-size';
 import { Issue } from '../../../core/library/library.models';
-import { PdfService } from '../../../core/pdf/pdf.service';
+import { PageImagesService } from '../../../core/pages/page-images.service';
 import { ReaderFit } from '../../../core/preferences/preferences.service';
 import { ComicPageComponent } from '../comic-page/comic-page.component';
 import { prefetchOrder } from '../reader-layout';
 
 const RENDER_AHEAD = 1.5;
 const PAGE_GAP = 8;
+const PREFETCH_PAGES = 6;
 
 @Component({
   selector: 'app-scroll-view',
@@ -41,7 +42,7 @@ const PAGE_GAP = 8;
               [page]="box.page"
               [width]="box.width"
               [height]="box.height"
-              [priority]="box.page === current() ? 'high' : 'low'"
+              [priority]="box.page === current() ? 'high' : 'auto'"
             />
           }
         </div>
@@ -53,7 +54,7 @@ const PAGE_GAP = 8;
 })
 export class ScrollViewComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
-  private readonly pdf = inject(PdfService);
+  private readonly images = inject(PageImagesService);
   private readonly size = elementSize(this.host);
 
   readonly issue = input.required<Issue>();
@@ -123,15 +124,13 @@ export class ScrollViewComponent {
 
     effect((onCleanup) => {
       const issue = this.issue();
-      const boxes = this.boxes();
       const current = this.current();
-      if (!boxes.length || boxes[0].width < 2) return;
       const abort = new AbortController();
       onCleanup(() => abort.abort());
-      for (const index of prefetchOrder(current - 1, boxes.length)) {
-        const box = boxes[index];
-        this.pdf.renderPage(issue, box.page, box.width, 'low', abort.signal).catch(() => {});
-      }
+      const pages = prefetchOrder(current - 1, issue.pages)
+        .slice(0, PREFETCH_PAGES)
+        .map((index) => index + 1);
+      this.images.prefetch(issue, pages, abort.signal);
     });
   }
 

@@ -11,7 +11,7 @@ import {
 
 import { elementSize } from '../../../core/layout/element-size';
 import { Issue } from '../../../core/library/library.models';
-import { PdfService } from '../../../core/pdf/pdf.service';
+import { PageImagesService } from '../../../core/pages/page-images.service';
 import { ReaderFit } from '../../../core/preferences/preferences.service';
 import { ComicPageComponent } from '../comic-page/comic-page.component';
 import { layoutView, PageView, prefetchOrder } from '../reader-layout';
@@ -19,6 +19,7 @@ import { layoutView, PageView, prefetchOrder } from '../reader-layout';
 const SWIPE_DISTANCE = 50;
 const TAP_SLOP = 10;
 const EDGE_ZONE = 0.3;
+const PREFETCH_VIEWS = 6;
 
 @Component({
   selector: 'app-paged-view',
@@ -47,7 +48,7 @@ const EDGE_ZONE = 0.3;
   styleUrl: './paged-view.component.scss',
 })
 export class PagedViewComponent {
-  private readonly pdf = inject(PdfService);
+  private readonly images = inject(PageImagesService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly size = elementSize(this.host);
 
@@ -81,17 +82,12 @@ export class PagedViewComponent {
     effect((onCleanup) => {
       const issue = this.issue();
       const views = this.views();
-      const index = this.viewIndex();
-      const stage = this.stage();
-      const fit = this.fit();
-      if (stage.width < 2) return;
       const abort = new AbortController();
       onCleanup(() => abort.abort());
-      for (const target of prefetchOrder(index, views.length)) {
-        for (const box of layoutView(views[target], issue.ratios, stage, fit)) {
-          this.pdf.renderPage(issue, box.page, box.width, 'low', abort.signal).catch(() => {});
-        }
-      }
+      const pages = prefetchOrder(this.viewIndex(), views.length)
+        .slice(0, PREFETCH_VIEWS)
+        .flatMap((index) => views[index]);
+      this.images.prefetch(issue, pages, abort.signal);
     });
   }
 

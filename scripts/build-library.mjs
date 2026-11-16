@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { copyFile, link, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,11 +10,16 @@ import { Worker } from 'node:worker_threads';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const COMICS_DIR = path.resolve(process.env.COMICS_DIR ?? 'C:\\invincible comics');
 const OUT_DIR = path.join(ROOT, 'public', 'library');
-const ISSUES_DIR = path.join(OUT_DIR, 'issues');
+const LEGACY_ISSUES_DIR = path.join(OUT_DIR, 'issues');
+const PAGES_DIR = path.join(OUT_DIR, 'pages');
 const COVERS_DIR = path.join(OUT_DIR, 'covers');
 const MANIFEST = path.join(OUT_DIR, 'library.json');
 const COVER_WIDTH = 480;
-const CONCURRENCY = Math.max(1, Math.min(8, os.availableParallelism() - 2));
+const COVER_QUALITY = 82;
+const PAGE_HEIGHT = 1600;
+const PAGE_QUALITY = 75;
+const RENDER_VERSION = `${PAGE_HEIGHT}q${PAGE_QUALITY}`;
+const CONCURRENCY = Math.max(1, os.availableParallelism() - 2);
 
 const FILE_PATTERN = /^Invincible\s+(\d{1,4})\s*\((\d{4})\)(.*)\.pdf$/i;
 
@@ -41,20 +46,7 @@ async function readPreviousManifest() {
   }
 }
 
-async function exposePdf(source, target) {
-  if (existsSync(target)) {
-    const [s, t] = await Promise.all([stat(source), stat(target)]);
-    if (s.size === t.size && t.mtimeMs >= s.mtimeMs - 1000) return;
-    await rm(target);
-  }
-  try {
-    await link(source, target);
-  } catch {
-    await copyFile(source, target);
-  }
-}
-
-class CoverPool {
+class RenderPool {
   #idle = [];
   #queue = [];
   #pending = new Map();
@@ -63,7 +55,7 @@ class CoverPool {
 
   constructor(size) {
     for (let i = 0; i < size; i++) {
-      const worker = new Worker(new URL('./render-cover.worker.mjs', import.meta.url));
+      const worker = new Worker(new URL('./render-issue.worker.mjs', import.meta.url));
       worker.on('message', ({ id, ok, error, ...result }) => {
         const job = this.#pending.get(id);
         this.#pending.delete(id);
@@ -77,9 +69,20 @@ class CoverPool {
     }
   }
 
-  render(pdfPath, coverPath) {
+  render(pdfPath, pagesDir, coverPath) {
     return new Promise((resolve, reject) => {
-      this.#queue.push({ id: this.#nextId++, pdfPath, coverPath, coverWidth: COVER_WIDTH, resolve, reject });
+      this.#queue.push({
+        id: this.#nextId++,
+        pdfPath,
+        pagesDir,
+        coverPath,
+        coverWidth: COVER_WIDTH,
+        coverQuality: COVER_QUALITY,
+        pageHeight: PAGE_HEIGHT,
+        pageQuality: PAGE_QUALITY,
+        resolve,
+        reject,
+      });
       this.#drain();
     });
   }
@@ -98,24 +101,44 @@ class CoverPool {
   }
 }
 
+async function countFiles(dir) {
+  try {
+    return (await readdir(dir)).length;
+  } catch {
+    return -1;
+  }
+}
+
+function writeManifest(issues) {
+  const manifest = {
+    version: 2,
+    series: 'Invincible',
+    publisher: 'Image Comics',
+    generatedAt: new Date().toISOString(),
+    issues,
+  };
+  return writeFile(MANIFEST, JSON.stringify(manifest));
+}
+
 async function processIssue(entry, previous, pool) {
   const source = path.join(COMICS_DIR, entry.fileName);
-  const pdfTarget = path.join(ISSUES_DIR, `${entry.id}.pdf`);
+  const pagesDir = path.join(PAGES_DIR, entry.id);
   const coverTarget = path.join(COVERS_DIR, `${entry.id}.webp`);
   const info = await stat(source);
   const fingerprint = createHash('sha1')
-    .update(`${entry.fileName}|${info.size}|${Math.round(info.mtimeMs)}`)
+    .update(`${entry.fileName}|${info.size}|${Math.round(info.mtimeMs)}|${RENDER_VERSION}`)
     .digest('hex')
     .slice(0, 12);
-
-  await exposePdf(source, pdfTarget);
 
   const prev = previous.get(entry.id);
   let pages = prev?.pages;
   let ratios = prev?.ratios;
-  if (!prev || prev.fingerprint !== fingerprint || !existsSync(coverTarget) || !ratios) {
-    ({ pages, ratios } = await pool.render(source, coverTarget));
-  }
+  const upToDate =
+    prev?.fingerprint === fingerprint &&
+    ratios &&
+    existsSync(coverTarget) &&
+    (await countFiles(pagesDir)) === pages;
+  if (!upToDate) ({ pages, ratios } = await pool.render(source, pagesDir, coverTarget));
 
   return {
     id: entry.id,
@@ -124,9 +147,8 @@ async function processIssue(entry, previous, pool) {
     variantCovers: entry.variantCovers,
     pages,
     ratios,
-    size: info.size,
     fingerprint,
-    file: `issues/${entry.id}.pdf`,
+    pagesPath: `pages/${entry.id}/`,
     cover: `covers/${entry.id}.webp?v=${fingerprint}`,
   };
 }
@@ -136,7 +158,8 @@ async function main() {
     console.error(`Comics folder not found: ${COMICS_DIR}\nSet COMICS_DIR to the folder with the PDFs.`);
     process.exit(1);
   }
-  await mkdir(ISSUES_DIR, { recursive: true });
+  await rm(LEGACY_ISSUES_DIR, { recursive: true, force: true });
+  await mkdir(PAGES_DIR, { recursive: true });
   await mkdir(COVERS_DIR, { recursive: true });
 
   const files = (await readdir(COMICS_DIR)).filter((f) => f.toLowerCase().endsWith('.pdf'));
@@ -156,6 +179,12 @@ async function main() {
   let cursor = 0;
   let done = 0;
   const started = Date.now();
+  let saving = Promise.resolve();
+  const checkpoint = () => {
+    const issues = entries.map((e, i) => results[i] ?? previous.get(e.id)).filter(Boolean);
+    saving = saving.then(() => writeManifest(issues));
+    return saving;
+  };
 
   async function worker() {
     while (cursor < entries.length) {
@@ -163,6 +192,7 @@ async function main() {
       const entry = entries[index];
       try {
         results[index] = await processIssue(entry, previous, pool);
+        await checkpoint();
       } catch (error) {
         console.error(`  failed: ${entry.fileName}\n    ${error?.message ?? error}`);
       }
@@ -171,7 +201,7 @@ async function main() {
     }
   }
   console.log(`Building library from ${COMICS_DIR} (${CONCURRENCY} threads)`);
-  const pool = new CoverPool(CONCURRENCY);
+  const pool = new RenderPool(CONCURRENCY);
   try {
     await Promise.all(Array.from({ length: CONCURRENCY }, worker));
   } finally {
@@ -179,24 +209,16 @@ async function main() {
   }
   process.stdout.write('\n');
 
+  await saving;
   const issues = results.filter(Boolean);
-  const manifest = {
-    version: 1,
-    series: 'Invincible',
-    publisher: 'Image Comics',
-    generatedAt: new Date().toISOString(),
-    issues,
-  };
-  await writeFile(MANIFEST, JSON.stringify(manifest));
+  await writeManifest(issues);
 
   const valid = new Set(entries.map((e) => e.id));
-  for (const [dir, ext] of [
-    [ISSUES_DIR, '.pdf'],
-    [COVERS_DIR, '.webp'],
-  ]) {
-    for (const f of await readdir(dir)) {
-      if (!valid.has(path.basename(f, ext))) await rm(path.join(dir, f));
-    }
+  for (const f of await readdir(COVERS_DIR)) {
+    if (!valid.has(path.basename(f, '.webp'))) await rm(path.join(COVERS_DIR, f));
+  }
+  for (const f of await readdir(PAGES_DIR)) {
+    if (!valid.has(f)) await rm(path.join(PAGES_DIR, f), { recursive: true, force: true });
   }
 
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
