@@ -30,13 +30,14 @@ jobs:
       - name: Test
         run: npm test -- --watch=false --browsers=ChromeHeadlessCI
 
+      - id: pages
+        uses: actions/configure-pages@v5
+
       - name: Build
         env:
           GOOGLE_TAG_ID: ${{ secrets.GOOGLE_TAG_ID || vars.GOOGLE_TAG_ID }}
           LIBRARY_BASE_URL: ${{ vars.LIBRARY_BASE_URL }}
-        run: npm run build -- --base-href "/${{ github.event.repository.name }}/"
-
-      - uses: actions/configure-pages@v5
+        run: npm run build -- --base-href "${{ steps.pages.outputs.base_path }}/"
 
       - uses: actions/upload-pages-artifact@v3
         with:

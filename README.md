@@ -3,7 +3,7 @@
 A fast, minimal, Invincible-themed web reader for the complete comic series. No sign-up: your reading
 position, finished issues and preferences are remembered in your browser.
 
-**Live site:** https://denysleontiev.github.io/InvincibleComics/
+**Live site:** https://invincible-comics.xyz/
 
 **Contributions are welcome!** Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
 
