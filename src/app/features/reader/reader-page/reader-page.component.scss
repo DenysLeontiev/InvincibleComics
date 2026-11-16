@@ -222,10 +222,8 @@
   }
 
   li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.5rem;
+    display: grid;
+    gap: 0.1rem;
   }
 
   .primary {

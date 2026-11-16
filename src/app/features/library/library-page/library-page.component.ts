@@ -13,11 +13,15 @@ import {
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Issue } from '../../../core/library/library.models';
 import { LibraryService } from '../../../core/library/library.service';
 import { LibraryFilter, PreferencesService } from '../../../core/preferences/preferences.service';
 import { ReadingProgressService } from '../../../core/progress/reading-progress.service';
+import { README_URL, REPOSITORY_URL } from '../../../core/project';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { LanguagePickerComponent } from '../../../shared/language-picker/language-picker.component';
 import { ProgressBarComponent } from '../../../shared/progress-bar/progress-bar.component';
 import { ContinueCardComponent } from '../continue-card/continue-card.component';
 import { continueTarget } from '../continue-target';
@@ -45,7 +49,9 @@ class LibraryScrollMemory {
     IssueCardComponent,
     LibraryToolbarComponent,
     IconComponent,
+    LanguagePickerComponent,
     ProgressBarComponent,
+    TranslatePipe,
   ],
   templateUrl: './library-page.component.html',
   styleUrl: './library-page.component.scss',
@@ -57,6 +63,10 @@ export class LibraryPageComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
   private readonly scrollMemory = inject(LibraryScrollMemory);
+  private readonly i18n = inject(I18nService);
+
+  protected readonly repositoryUrl = REPOSITORY_URL;
+  protected readonly readmeUrl = README_URL;
 
   protected readonly filter = this.prefs.libraryFilter;
   protected readonly jumpNotFound = signal(false);
@@ -80,10 +90,10 @@ export class LibraryPageComponent {
   protected readonly filterOptions = computed<FilterOption[]>(() => {
     const s = this.stats();
     return [
-      { value: 'all', label: 'All', count: s.total },
-      { value: 'unread', label: 'Unread', count: s.unread },
-      { value: 'reading', label: 'Reading', count: s.reading },
-      { value: 'read', label: 'Finished', count: s.read },
+      { value: 'all', label: this.i18n.t('filter.all'), count: s.total },
+      { value: 'unread', label: this.i18n.t('filter.unread'), count: s.unread },
+      { value: 'reading', label: this.i18n.t('filter.reading'), count: s.reading },
+      { value: 'read', label: this.i18n.t('filter.read'), count: s.read },
     ];
   });
 
@@ -107,7 +117,8 @@ export class LibraryPageComponent {
   });
 
   constructor() {
-    inject(Title).setTitle('Invincible · Comic Reader');
+    const title = inject(Title);
+    effect(() => title.setTitle(this.i18n.t('app.title')));
 
     let restored = false;
     effect(() => {
@@ -145,6 +156,6 @@ export class LibraryPageComponent {
   }
 
   protected resetProgress(): void {
-    if (confirm('Clear all reading progress? This cannot be undone.')) this.progress.clearAll();
+    if (confirm(this.i18n.t('library.resetConfirm'))) this.progress.clearAll();
   }
 }

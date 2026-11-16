@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Issue } from '../../../core/library/library.models';
 import { IconComponent } from '../../../shared/icon/icon.component';
 import { IssueNumberPipe } from '../../../shared/issue-number.pipe';
@@ -7,15 +8,15 @@ import { IssueNumberPipe } from '../../../shared/issue-number.pipe';
 @Component({
   selector: 'app-reader-footer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, IssueNumberPipe],
+  imports: [IconComponent, IssueNumberPipe, TranslatePipe],
   template: `
     <button
       type="button"
       class="issue-button"
       [disabled]="!previousIssue()"
       (click)="openIssue.emit(previousIssue()!)"
-      [attr.aria-label]="previousIssue() ? 'Previous issue ' + (previousIssue()!.number | issueNumber) : 'No previous issue'"
-      [title]="previousIssue() ? 'Previous issue' : ''"
+      [attr.aria-label]="previousIssue() ? ('reader.previousIssue' | t) + ' ' + (previousIssue()!.number | issueNumber) : ('reader.noPreviousIssue' | t)"
+      [title]="previousIssue() ? ('reader.previousIssue' | t) : ''"
     >
       <app-icon name="skip-back" />
       <span class="label">{{ previousIssue()?.number | issueNumber }}</span>
@@ -32,8 +33,8 @@ import { IssueNumberPipe } from '../../../shared/issue-number.pipe';
         [max]="pages()"
         step="1"
         [value]="page()"
-        aria-label="Page"
-        [attr.aria-valuetext]="'Page ' + label() + ' of ' + pages()"
+        [attr.aria-label]="'reader.page' | t"
+        [attr.aria-valuetext]="'reader.pageOf' | t: { page: label(), total: pages() }"
         (input)="onInput($event)"
         (pointerdown)="dragging.set(true)"
         (pointerup)="dragging.set(false)"
@@ -50,8 +51,8 @@ import { IssueNumberPipe } from '../../../shared/issue-number.pipe';
       class="issue-button"
       [disabled]="!nextIssue()"
       (click)="openIssue.emit(nextIssue()!)"
-      [attr.aria-label]="nextIssue() ? 'Next issue ' + (nextIssue()!.number | issueNumber) : 'No next issue'"
-      [title]="nextIssue() ? 'Next issue' : ''"
+      [attr.aria-label]="nextIssue() ? ('reader.nextIssue' | t) + ' ' + (nextIssue()!.number | issueNumber) : ('reader.noNextIssue' | t)"
+      [title]="nextIssue() ? ('reader.nextIssue' | t) : ''"
     >
       <span class="label">{{ nextIssue()?.number | issueNumber }}</span>
       <app-icon name="skip-forward" />

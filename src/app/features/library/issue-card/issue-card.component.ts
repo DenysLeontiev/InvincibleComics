@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Issue } from '../../../core/library/library.models';
 import { LibraryService } from '../../../core/library/library.service';
 import { ReadingProgressService } from '../../../core/progress/reading-progress.service';
@@ -11,7 +12,7 @@ import { ProgressBarComponent } from '../../../shared/progress-bar/progress-bar.
 @Component({
   selector: 'app-issue-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, IconComponent, IssueNumberPipe, ProgressBarComponent],
+  imports: [RouterLink, IconComponent, IssueNumberPipe, ProgressBarComponent, TranslatePipe],
   templateUrl: './issue-card.component.html',
   styleUrl: './issue-card.component.scss',
   host: {

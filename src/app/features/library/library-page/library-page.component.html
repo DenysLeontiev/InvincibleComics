@@ -1,34 +1,67 @@
+<a class="banner" [href]="repositoryUrl" target="_blank" rel="noopener">
+  <app-icon name="github" />
+  <span class="banner-text">{{ 'banner.text' | t }}</span>
+  <span class="banner-cta">{{ 'banner.cta' | t }} <app-icon name="arrow-up-right" /></span>
+</a>
+
 <header class="masthead">
   <div class="brand">
     <span class="logo" aria-hidden="true">I</span>
     <div>
       <h1 class="wordmark">Invincible</h1>
-      <p class="tagline">The complete series · {{ stats().total }} issues</p>
+      <p class="tagline">
+        {{ 'header.tagline' | t }}
+        @if (stats().total) {
+          · {{ 'common.issues' | t: { count: stats().total } }}
+        }
+      </p>
     </div>
   </div>
 
-  @if (library.isReady() && stats().read + stats().reading > 0) {
-    <div class="overall" [attr.aria-label]="stats().read + ' of ' + stats().total + ' issues read'">
-      <span class="overall-label">
-        <strong>{{ stats().read }}</strong> / {{ stats().total }} read
-      </span>
-      <app-progress-bar [value]="stats().total ? stats().read / stats().total : 0" />
-    </div>
-  }
+  <div class="actions">
+    @if (library.isReady() && stats().read + stats().reading > 0) {
+      <div class="overall" [attr.aria-label]="'header.readAria' | t: { read: stats().read, total: stats().total }">
+        <span class="overall-label">
+          <strong>{{ stats().read }}</strong> / {{ stats().total }} {{ 'header.read' | t }}
+        </span>
+        <app-progress-bar [value]="stats().total ? stats().read / stats().total : 0" />
+      </div>
+    }
+    <app-language-picker />
+    <a
+      class="github"
+      [href]="repositoryUrl"
+      target="_blank"
+      rel="noopener"
+      [attr.aria-label]="'header.github' | t"
+      [title]="'header.github' | t"
+    >
+      <app-icon name="github" />
+    </a>
+  </div>
 </header>
 
 <main class="content">
-  @if (library.error()) {
+  @if (library.missing()) {
     <section class="state" role="alert">
-      <h2>Couldn't load the library</h2>
-      <p>Check your connection and try again. If you're running the app locally, run <code>npm run library</code> first.</p>
+      <h2>{{ 'library.missingTitle' | t }}</h2>
+      <p>{{ 'library.missingText' | t }}</p>
+      <p class="local">{{ 'library.errorLocal' | t }} <code>npm run library</code></p>
+      <a class="retry" [href]="readmeUrl" target="_blank" rel="noopener">
+        <app-icon name="github" /> {{ 'library.readme' | t }}
+      </a>
+    </section>
+  } @else if (library.error()) {
+    <section class="state" role="alert">
+      <h2>{{ 'library.errorTitle' | t }}</h2>
+      <p>{{ 'library.errorText' | t }}</p>
       <button type="button" class="retry" (click)="library.reload()">
-        <app-icon name="refresh" /> Try again
+        <app-icon name="refresh" /> {{ 'common.tryAgain' | t }}
       </button>
     </section>
   } @else if (!library.isReady()) {
     <div class="skeleton-hero" aria-hidden="true"></div>
-    <div class="grid" aria-busy="true" aria-label="Loading issues">
+    <div class="grid" aria-busy="true" [attr.aria-label]="'library.loading' | t">
       @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; track i) {
         <div class="skeleton-card"></div>
       }
@@ -51,7 +84,7 @@
       <section class="year" [attr.aria-labelledby]="'year-' + group.year">
         <h2 class="year-title" [id]="'year-' + group.year">
           {{ group.year }}
-          <span class="year-count">{{ group.issues.length }} {{ group.issues.length === 1 ? 'issue' : 'issues' }}</span>
+          <span class="year-count">{{ 'common.issues' | t: { count: group.issues.length } }}</span>
         </h2>
         <div class="grid">
           @for (issue of group.issues; track issue.id) {
@@ -61,22 +94,22 @@
       </section>
     } @empty {
       <section class="state">
-        <h2>Nothing here yet</h2>
+        <h2>{{ 'library.emptyTitle' | t }}</h2>
         <p>
           @switch (filter()) {
-            @case ('reading') { Issues you've started will show up here. }
-            @case ('read') { Finished issues will show up here. }
-            @default { You've read everything. Legendary. }
+            @case ('reading') { {{ 'library.emptyReading' | t }} }
+            @case ('read') { {{ 'library.emptyRead' | t }} }
+            @default { {{ 'library.emptyUnread' | t }} }
           }
         </p>
-        <button type="button" class="retry" (click)="setFilter('all')">Show all issues</button>
+        <button type="button" class="retry" (click)="setFilter('all')">{{ 'library.showAll' | t }}</button>
       </section>
     }
 
     @if (stats().read + stats().reading > 0) {
       <footer class="footer">
         <button type="button" class="link" (click)="resetProgress()">
-          <app-icon name="rotate-ccw" /> Reset reading progress
+          <app-icon name="rotate-ccw" /> {{ 'library.reset' | t }}
         </button>
       </footer>
     }

@@ -6,6 +6,69 @@
   padding: 0 var(--page-gutter) 4rem;
 }
 
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  margin-inline: calc(var(--page-gutter) * -1);
+  padding: 0.55rem var(--page-gutter);
+  border-block-end: 1px solid var(--border);
+  background: linear-gradient(90deg, rgb(41 171 226 / 0.1), rgb(255 224 27 / 0.08));
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+  text-decoration: none;
+  --icon-size: 0.95rem;
+  transition: background 200ms ease;
+
+  &:hover {
+    background: linear-gradient(90deg, rgb(41 171 226 / 0.16), rgb(255 224 27 / 0.12));
+
+    .banner-cta {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
+.banner-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--yellow);
+  font-weight: 650;
+  --icon-size: 0.85rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.github {
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  --icon-size: 1.15rem;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+
+  &:hover {
+    border-color: rgb(255 255 255 / 0.25);
+    color: var(--yellow);
+  }
+}
+
 .masthead {
   display: flex;
   align-items: center;
@@ -55,7 +118,7 @@
 .overall {
   display: grid;
   gap: 0.4rem;
-  inline-size: min(240px, 100%);
+  inline-size: min(200px, 100%);
   font-size: 0.82rem;
   color: var(--text-muted);
   --progress-color: var(--blue);
@@ -143,7 +206,12 @@
     color: var(--text-muted);
   }
 
+  .local {
+    font-size: 0.85rem;
+  }
+
   code {
+    white-space: nowrap;
     padding: 0.1rem 0.35rem;
     border-radius: 0.3rem;
     background: var(--surface-2);
@@ -152,6 +220,7 @@
 }
 
 .retry {
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -213,5 +282,20 @@
 
   &:hover {
     color: var(--red);
+  }
+}
+
+@media (max-width: 560px) {
+  .actions {
+    flex-wrap: wrap;
+    inline-size: 100%;
+  }
+
+  .overall {
+    flex: 1;
+  }
+
+  .banner-text {
+    display: none;
   }
 }

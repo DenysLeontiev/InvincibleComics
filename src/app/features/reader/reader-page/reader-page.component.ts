@@ -16,6 +16,8 @@ import { DOCUMENT } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { elementSize } from '../../../core/layout/element-size';
 import { Issue } from '../../../core/library/library.models';
 import { LibraryService } from '../../../core/library/library.service';
@@ -48,6 +50,7 @@ const MIN_DOUBLE_WIDTH = 720;
     ReaderFooterComponent,
     ReaderToolbarComponent,
     ScrollViewComponent,
+    TranslatePipe,
   ],
   templateUrl: './reader-page.component.html',
   styleUrl: './reader-page.component.scss',
@@ -66,6 +69,7 @@ export class ReaderPageComponent {
   private readonly router = inject(Router);
   private readonly title = inject(Title);
   private readonly document = inject(DOCUMENT);
+  private readonly i18n = inject(I18nService);
   private readonly size = elementSize();
 
   readonly id = input.required<string>();
@@ -152,7 +156,9 @@ export class ReaderPageComponent {
 
     effect(() => {
       const issue = this.issue();
-      this.title.setTitle(issue ? `Invincible #${issue.number} · Reader` : 'Invincible · Reader');
+      this.title.setTitle(
+        issue ? this.i18n.t('app.readerTitle', { issue: `#${issue.number}` }) : this.i18n.t('app.title'),
+      );
     });
 
     effect(() => {

@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
+import { TranslationKey } from '../../../core/i18n/i18n.types';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Issue } from '../../../core/library/library.models';
 import { ReaderFit, ReaderLayout } from '../../../core/preferences/preferences.service';
 import { IconComponent, IconName } from '../../../shared/icon/icon.component';
@@ -8,21 +10,21 @@ import { IssueNumberPipe } from '../../../shared/issue-number.pipe';
 interface LayoutOption {
   readonly value: ReaderLayout;
   readonly icon: IconName;
-  readonly label: string;
+  readonly label: TranslationKey;
 }
 
 const LAYOUTS: readonly LayoutOption[] = [
-  { value: 'single', icon: 'page-single', label: 'Single page' },
-  { value: 'double', icon: 'page-double', label: 'Two-page spread' },
-  { value: 'scroll', icon: 'page-scroll', label: 'Vertical scroll' },
+  { value: 'single', icon: 'page-single', label: 'reader.single' },
+  { value: 'double', icon: 'page-double', label: 'reader.double' },
+  { value: 'scroll', icon: 'page-scroll', label: 'reader.scroll' },
 ];
 
 @Component({
   selector: 'app-reader-toolbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, IssueNumberPipe],
+  imports: [IconComponent, IssueNumberPipe, TranslatePipe],
   template: `
-    <button type="button" class="icon-button back" (click)="back.emit()" aria-label="Back to library" title="Back to library (Esc)">
+    <button type="button" class="icon-button back" (click)="back.emit()" [attr.aria-label]="'common.backToLibrary' | t" [title]="'reader.backShortcut' | t">
       <app-icon name="arrow-left" />
     </button>
 
@@ -33,15 +35,15 @@ const LAYOUTS: readonly LayoutOption[] = [
     </div>
 
     <div class="actions">
-      <div class="segmented" role="radiogroup" aria-label="Page layout">
+      <div class="segmented" role="radiogroup" [attr.aria-label]="'reader.layout' | t">
         @for (option of layouts; track option.value) {
           <button
             type="button"
             role="radio"
             class="icon-button"
             [attr.aria-checked]="layout() === option.value"
-            [attr.aria-label]="option.label"
-            [title]="option.label"
+            [attr.aria-label]="option.label | t"
+            [title]="option.label | t"
             [disabled]="option.value === 'double' && !canDouble()"
             (click)="layoutChange.emit(option.value)"
           >
@@ -54,8 +56,8 @@ const LAYOUTS: readonly LayoutOption[] = [
         type="button"
         class="icon-button"
         [attr.aria-pressed]="fit() === 'width'"
-        [attr.aria-label]="fit() === 'width' ? 'Fit page to screen' : 'Fit page to width'"
-        [title]="fit() === 'width' ? 'Fit page to screen' : 'Fit page to width'"
+        [attr.aria-label]="(fit() === 'width' ? 'reader.fitScreen' : 'reader.fitWidth') | t"
+        [title]="(fit() === 'width' ? 'reader.fitScreen' : 'reader.fitWidth') | t"
         (click)="fitChange.emit(fit() === 'width' ? 'contain' : 'width')"
       >
         <app-icon [name]="fit() === 'width' ? 'fit-contain' : 'fit-width'" />
@@ -65,8 +67,8 @@ const LAYOUTS: readonly LayoutOption[] = [
         <button
           type="button"
           class="icon-button"
-          [attr.aria-label]="fullscreen() ? 'Exit full screen' : 'Full screen'"
-          [title]="(fullscreen() ? 'Exit full screen' : 'Full screen') + ' (F)'"
+          [attr.aria-label]="(fullscreen() ? 'reader.exitFullscreen' : 'reader.fullscreen') | t"
+          [title]="((fullscreen() ? 'reader.exitFullscreen' : 'reader.fullscreen') | t) + ' (F)'"
           (click)="toggleFullscreen.emit()"
         >
           <app-icon [name]="fullscreen() ? 'minimize' : 'maximize'" />

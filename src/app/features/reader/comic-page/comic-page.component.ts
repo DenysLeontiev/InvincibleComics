@@ -9,6 +9,7 @@ import {
   untracked,
 } from '@angular/core';
 
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Issue } from '../../../core/library/library.models';
 import { LibraryService } from '../../../core/library/library.service';
 import { PdfService, RenderAbortedError, RenderPriority } from '../../../core/pdf/pdf.service';
@@ -17,7 +18,7 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 @Component({
   selector: 'app-comic-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   host: {
     '[style.width.px]': 'width()',
     '[style.height.px]': 'height()',
@@ -25,11 +26,11 @@ import { IconComponent } from '../../../shared/icon/icon.component';
   },
   template: `
     @if (src(); as url) {
-      <img [src]="url" [alt]="'Page ' + page()" draggable="false" />
+      <img [src]="url" [alt]="'page.alt' | t: { page: page() }" draggable="false" />
     } @else if (failed()) {
       <div class="error">
-        <span>Page {{ page() }} couldn't be drawn</span>
-        <button type="button" (click)="retry($event)"><app-icon name="refresh" /> Retry</button>
+        <span>{{ 'page.error' | t: { page: page() } }}</span>
+        <button type="button" (click)="retry($event)"><app-icon name="refresh" /> {{ 'page.retry' | t }}</button>
       </div>
     } @else if (placeholder(); as thumb) {
       <img class="thumb" [src]="thumb" alt="" draggable="false" />

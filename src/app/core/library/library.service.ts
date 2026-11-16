@@ -1,17 +1,23 @@
-import { httpResource } from '@angular/common/http';
+import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import { computed, inject, Injectable } from '@angular/core';
 
 import { LIBRARY_BASE_URL, resolveUrl } from './library.config';
 import { Issue, LibraryManifest } from './library.models';
 
+const withTrailingSlash = (url: string) => (url.endsWith('/') ? url : `${url}/`);
+
 @Injectable({ providedIn: 'root' })
 export class LibraryService {
-  private readonly baseUrl = resolveUrl(inject(LIBRARY_BASE_URL));
+  private readonly baseUrl = withTrailingSlash(resolveUrl(inject(LIBRARY_BASE_URL)));
 
   private readonly manifest = httpResource<LibraryManifest>(() => `${this.baseUrl}library.json`);
 
   readonly isLoading = this.manifest.isLoading;
   readonly error = this.manifest.error;
+  readonly missing = computed(() => {
+    const error = this.manifest.error();
+    return error instanceof HttpErrorResponse && error.status === 404;
+  });
   readonly isReady = computed(() => this.manifest.hasValue());
 
   readonly issues = computed<readonly Issue[]>(() =>

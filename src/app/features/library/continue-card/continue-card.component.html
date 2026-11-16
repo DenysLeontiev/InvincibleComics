@@ -15,9 +15,9 @@
       <span class="number">{{ t.issue.number | issueNumber }}</span>
     </h2>
     <p class="meta">
-      {{ t.issue.year }} · {{ t.issue.pages }} pages
+      {{ t.issue.year }} · {{ 'common.pages' | t: { count: t.issue.pages } }}
       @if (t.kind === 'resume' || (t.kind === 'next' && t.page > 1)) {
-        · page {{ t.page }} of {{ t.issue.pages }}
+        · {{ 'continue.pageOf' | t: { page: t.page, total: t.issue.pages } }}
       }
     </p>
 

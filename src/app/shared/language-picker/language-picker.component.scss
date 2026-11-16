@@ -1,0 +1,97 @@
+:host {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+
+.trigger {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  block-size: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+  --icon-size: 0.9rem;
+  transition: border-color 150ms ease;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    border-color: rgb(255 255 255 / 0.25);
+  }
+}
+
+.code {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.flag {
+  inline-size: 20px;
+  block-size: 14px;
+  border-radius: 3px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+
+.menu {
+  position: absolute;
+  inset-block-start: calc(100% + 0.4rem);
+  inset-inline-end: 0;
+  z-index: 20;
+  display: grid;
+  min-inline-size: 12rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: 0 20px 50px -12px rgb(0 0 0 / 0.8);
+  animation: pop 160ms var(--ease-out) both;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: rgb(255 255 255 / 0.08);
+    outline: none;
+  }
+
+  &[aria-checked='true'] {
+    color: var(--yellow);
+  }
+}
+
+.name {
+  flex: 1;
+}
+
+.check {
+  --icon-size: 1rem;
+}

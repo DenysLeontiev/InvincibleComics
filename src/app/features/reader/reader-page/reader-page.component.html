@@ -17,18 +17,18 @@
   <div class="stage">
     @if (doc.error()) {
       <div class="center-panel" role="alert">
-        <h2>Couldn't open {{ current.number | issueNumber }}</h2>
-        <p>The file didn't load. Check your connection and try again.</p>
+        <h2>{{ 'reader.openError' | t: { issue: (current.number | issueNumber) } }}</h2>
+        <p>{{ 'reader.openErrorText' | t }}</p>
         <div class="row">
-          <button type="button" class="primary" (click)="retry()"><app-icon name="refresh" /> Try again</button>
-          <button type="button" class="ghost" (click)="back()">Back to library</button>
+          <button type="button" class="primary" (click)="retry()"><app-icon name="refresh" /> {{ 'common.tryAgain' | t }}</button>
+          <button type="button" class="ghost" (click)="back()">{{ 'common.backToLibrary' | t }}</button>
         </div>
       </div>
     } @else if (!doc.hasValue()) {
       <div class="center-panel loading" aria-live="polite">
         <img class="loading-cover" [src]="coverUrl()" alt="" width="480" height="738" />
         <p class="loading-label">
-          Opening <strong>Invincible {{ current.number | issueNumber }}</strong>
+          {{ 'reader.opening' | t }} <strong>Invincible {{ current.number | issueNumber }}</strong>
           @if (loadProgress() > 0 && loadProgress() < 1) {
             <span class="percent">{{ (loadProgress() * 100).toFixed(0) }}%</span>
           }
@@ -97,27 +97,27 @@
   }
 
   @if (showHints()) {
-    <div class="hints" role="dialog" aria-label="How to read" (click)="dismissHints()">
+    <div class="hints" role="dialog" [attr.aria-label]="'hints.title' | t" (click)="dismissHints()">
       <div class="hints-card" (click)="$event.stopPropagation()">
-        <h2>How to read</h2>
+        <h2>{{ 'hints.title' | t }}</h2>
         <ul>
-          <li><span class="key">Tap / click right edge</span> next page</li>
-          <li><span class="key">Tap / click left edge</span> previous page</li>
-          <li><span class="key">Tap the middle</span> show or hide controls</li>
-          <li><span class="key">Swipe</span> turn pages on touch screens</li>
-          <li><span class="key">← → · Space · F</span> keyboard shortcuts</li>
+          <li><span class="key">{{ 'hints.rightKey' | t }}</span> {{ 'hints.right' | t }}</li>
+          <li><span class="key">{{ 'hints.leftKey' | t }}</span> {{ 'hints.left' | t }}</li>
+          <li><span class="key">{{ 'hints.middleKey' | t }}</span> {{ 'hints.middle' | t }}</li>
+          <li><span class="key">{{ 'hints.swipeKey' | t }}</span> {{ 'hints.swipe' | t }}</li>
+          <li><span class="key">{{ 'hints.keysKey' | t }}</span> {{ 'hints.keys' | t }}</li>
         </ul>
-        <p class="hint-note">Your place is saved automatically.</p>
-        <button type="button" class="primary" (click)="dismissHints()">Got it</button>
+        <p class="hint-note">{{ 'hints.saved' | t }}</p>
+        <button type="button" class="primary" (click)="dismissHints()">{{ 'hints.ok' | t }}</button>
       </div>
     </div>
   }
 } @else if (notFound() || libraryError()) {
   <div class="center-panel" role="alert">
-    <h2>{{ libraryError() ? "Couldn't load the library" : 'Issue not found' }}</h2>
-    <p>{{ libraryError() ? 'Check your connection and try again.' : "This issue isn't in the library." }}</p>
-    <button type="button" class="primary" (click)="back()"><app-icon name="library" /> Go to library</button>
+    <h2>{{ (libraryError() ? 'library.errorTitle' : 'reader.notFound') | t }}</h2>
+    <p>{{ (libraryError() ? 'library.errorText' : 'reader.notFoundText') | t }}</p>
+    <button type="button" class="primary" (click)="back()"><app-icon name="library" /> {{ 'reader.goToLibrary' | t }}</button>
   </div>
 } @else {
-  <div class="center-panel"><span class="spinner" aria-label="Loading"></span></div>
+  <div class="center-panel"><span class="spinner" [attr.aria-label]="'common.loading' | t"></span></div>
 }
